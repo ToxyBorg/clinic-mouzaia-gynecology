@@ -7,6 +7,7 @@ import {
 	TextInput,
 	Textarea,
 	Image,
+	FileInput,
 	Button,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
@@ -27,23 +28,44 @@ const ColposcopyForm: React.FC = () => {
 	const [conclusion, setConclusion] = useState("");
 	const [actionPlan, setActionPlan] = useState("");
 
+	const [sansPrepImage, setSansPrepImage] = useState<File | null>(null);
+	const [acAcetImage, setAcAcetImage] = useState<File | null>(null);
+	const [lugolImage, setLugolImage] = useState<File | null>(null);
+	const [vaginImage, setVaginImage] = useState<File | null>(null);
+
+	const fileToBase64 = (file: File): Promise<string> => {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.readAsDataURL(file);
+			reader.onload = () => resolve(reader.result as string);
+			reader.onerror = (error) => reject(error);
+		});
+	};
+
 	const handleGeneratePdf = async () => {
+		const formattedLastMenstrualPeriod = lastMenstrualPeriod
+			? new Date(lastMenstrualPeriod).toLocaleDateString("fr-FR")
+			: "";
+		const formattedExaminationDate = examinationDate
+			? new Date(examinationDate).toLocaleDateString("fr-FR")
+			: "";
+
 		const formData = {
 			patientLastName: patientLastName,
 			patientFirstName: patientFirstName,
 			patientAge: patientAge,
 			treatingDoctor: treatingDoctor,
-			lastMenstrualPeriod: lastMenstrualPeriod
-				? new Date(lastMenstrualPeriod).toLocaleDateString("fr-FR")
-				: "",
-			examinationDate: examinationDate
-				? new Date(examinationDate).toLocaleDateString("fr-FR")
-				: "",
+			lastMenstrualPeriod: formattedLastMenstrualPeriod,
+			examinationDate: formattedExaminationDate,
 			parity: parity,
 			medicalHistory: medicalHistory,
 			indication: indication,
 			conclusion: conclusion,
 			actionPlan: actionPlan,
+			sansPrepImage: sansPrepImage ? await fileToBase64(sansPrepImage) : null,
+			acAcetImage: acAcetImage ? await fileToBase64(acAcetImage) : null,
+			lugolImage: lugolImage ? await fileToBase64(lugolImage) : null,
+			vaginImage: vaginImage ? await fileToBase64(vaginImage) : null,
 		};
 
 		console.log("Form data being sent to server:", formData);
@@ -238,17 +260,20 @@ const ColposcopyForm: React.FC = () => {
 						>
 							Sans Prep.
 						</Title>
-						<div
-							style={{
-								border: "1px solid #ccc",
-								height: 200,
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
-							}}
-						>
-							<Text>Diagram Placeholder</Text>
-						</div>
+						<FileInput
+							label='Upload image'
+							placeholder='No file selected'
+							value={sansPrepImage}
+							onChange={setSansPrepImage}
+						/>
+						{sansPrepImage && (
+							<Image
+								src={URL.createObjectURL(sansPrepImage)}
+								alt='Sans Prep Preview'
+								h={200}
+								fit='contain'
+							/>
+						)}
 					</Stack>
 				</Grid.Col>
 				<Grid.Col span={{ base: 12, md: 6 }}>
@@ -259,17 +284,20 @@ const ColposcopyForm: React.FC = () => {
 						>
 							Ac. Acet.
 						</Title>
-						<div
-							style={{
-								border: "1px solid #ccc",
-								height: 200,
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
-							}}
-						>
-							<Text>Diagram Placeholder</Text>
-						</div>
+						<FileInput
+							label='Upload image'
+							placeholder='No file selected'
+							value={acAcetImage}
+							onChange={setAcAcetImage}
+						/>
+						{acAcetImage && (
+							<Image
+								src={URL.createObjectURL(acAcetImage)}
+								alt='Ac. Acet Preview'
+								h={200}
+								fit='contain'
+							/>
+						)}
 					</Stack>
 				</Grid.Col>
 				<Grid.Col span={{ base: 12, md: 6 }}>
@@ -280,17 +308,20 @@ const ColposcopyForm: React.FC = () => {
 						>
 							Lugol
 						</Title>
-						<div
-							style={{
-								border: "1px solid #ccc",
-								height: 200,
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
-							}}
-						>
-							<Text>Diagram Placeholder</Text>
-						</div>
+						<FileInput
+							label='Upload image'
+							placeholder='No file selected'
+							value={lugolImage}
+							onChange={setLugolImage}
+						/>
+						{lugolImage && (
+							<Image
+								src={URL.createObjectURL(lugolImage)}
+								alt='Lugol Preview'
+								h={200}
+								fit='contain'
+							/>
+						)}
 					</Stack>
 				</Grid.Col>
 				<Grid.Col span={{ base: 12, md: 6 }}>
@@ -301,17 +332,20 @@ const ColposcopyForm: React.FC = () => {
 						>
 							Vagin
 						</Title>
-						<div
-							style={{
-								border: "1px solid #ccc",
-								height: 200,
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
-							}}
-						>
-							<Text>Diagram Placeholder</Text>
-						</div>
+						<FileInput
+							label='Upload image'
+							placeholder='No file selected'
+							value={vaginImage}
+							onChange={setVaginImage}
+						/>
+						{vaginImage && (
+							<Image
+								src={URL.createObjectURL(vaginImage)}
+								alt='Vagin Preview'
+								h={200}
+								fit='contain'
+							/>
+						)}
 					</Stack>
 				</Grid.Col>
 			</Grid>
