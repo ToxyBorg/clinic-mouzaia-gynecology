@@ -7,7 +7,14 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:up": "docker-compose up -d postgres",
+    "backend:up": "docker-compose up -d print-server",
+    "frontend:up": "docker-compose up -d frontend",
+    "db:down": "docker-compose stop postgres && docker-compose rm -f postgres",
+    "backend:down": "docker-compose stop print-server && docker-compose rm -f print-server",
+    "frontend:down": "docker-compose stop frontend && docker-compose rm -f frontend",
+    "all:down": "docker-compose down"
   },
   "dependencies": {
     "@heroui/date-picker": "^2.3.20",

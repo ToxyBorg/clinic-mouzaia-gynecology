@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: mouzaia_clinic_postgres
+    environment:
+      POSTGRES_USER: mouzaia
+      POSTGRES_PASSWORD: mouzaia123
+      POSTGRES_DB: mouzaia_clinic
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mouzaia_clinic_apps_shared_network
+
+  print-server:
+    build:
+      context: ./print-server
+    container_name: mouzaia_clinic_print_server
+    environment:
+      DATABASE_URL: "postgresql://mouzaia:mouzaia123@postgres:5432/mouzaia_clinic?schema=public"
+    depends_on:
+      - postgres
+    networks:
+      - mouzaia_clinic_apps_shared_network
+    ports:
+      - "3001:3001" # Adjust if your print server uses a different port
+
+networks:
+  mouzaia_clinic_apps_shared_network:
+    external: true
+
+volumes:
+  postgres_data:
