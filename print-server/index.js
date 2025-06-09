@@ -2,6 +2,17 @@ const express = require('express');
 const { PDFDocument } = require('pdf-lib');
 const fs = require('node:fs/promises');
 const path = require('path');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+// Test database connection on startup
+prisma.$connect()
+    .then(() => {
+        console.log('Successfully connected to the database');
+    })
+    .catch((error) => {
+        console.error('Failed to connect to the database:', error);
+    });
 
 const app = express();
 const port = 3001; // Choose a port that doesn't conflict with your Vite app
@@ -10,7 +21,7 @@ app.use(express.json({ limit: '50mb' }));
 
 // CORS middleware
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Adjust as needed for production
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173'); // Vite's default port
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') {
@@ -46,6 +57,12 @@ app.post('/generate-pdf', async (req, res) => {
     try {
         const formData = req.body;
         console.log('Server received form data:', formData);
+
+        // Validate required fields
+        if (!formData.patientFirstName || !formData.patientLastName || !formData.patientAge) {
+            console.error('Missing required fields');
+            return res.status(400).send('Missing required fields');
+        }
 
         const pdfPath = path.join(__dirname, 'EXAMEN COLPOSCOPIQUE CLINIQUE MOUZAIA.pdf');
         const existingPdfBytes = await fs.readFile(pdfPath);
@@ -170,6 +187,33 @@ app.post('/generate-pdf', async (req, res) => {
         }
 
         const pdfBytes = await pdfDoc.save();
+        console.log('PDF generated successfully, size:', pdfBytes.length, 'bytes');
+
+        try {
+            console.log('Attempting to save to database...');
+            // Save the generated PDF to the database
+            const exam = await prisma.colposcopyExam.create({
+                data: {
+                    patientName: formData.patientFirstName + ' ' + formData.patientLastName,
+                    patientAge: parseInt(formData.patientAge, 10),
+                    patientFileNumber: formData.patientFileNumber || 'N/A',
+                    examDate: new Date(formData.examinationDate || new Date()),
+                    doctorName: formData.treatingDoctor || 'N/A',
+                    indication: formData.indication || 'N/A',
+                    findings: formData.medicalHistory || 'N/A',
+                    conclusion: formData.conclusion || 'N/A',
+                    recommendations: formData.actionPlan || 'N/A',
+                    pdfData: pdfBytes,
+                    pdfFileName: 'colposcopy_exam_report.pdf',
+                    notes: formData.notes || null,
+                    status: 'COMPLETED'
+                }
+            });
+            console.log('Successfully saved exam to database with ID:', exam.id);
+        } catch (dbError) {
+            console.error('Database error:', dbError);
+            // Continue with sending the PDF even if database save fails
+        }
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=colposcopy_exam_report.pdf');
@@ -178,6 +222,36 @@ app.post('/generate-pdf', async (req, res) => {
     } catch (error) {
         console.error('Error generating PDF:', error);
         res.status(500).send('Error generating PDF');
+    }
+});
+
+// Add a test endpoint to check database connection
+app.get('/test-db', async (req, res) => {
+    try {
+        const examCount = await prisma.colposcopyExam.count();
+        res.json({
+            status: 'Database connection successful',
+            examCount: examCount
+        });
+    } catch (error) {
+        console.error('Database test failed:', error);
+        res.status(500).json({
+            status: 'Database connection failed',
+            error: error.message
+        });
+    }
+});
+
+// Add a new endpoint to list all generated exams
+app.get('/exams', async (req, res) => {
+    try {
+        const exams = await prisma.colposcopyExam.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(exams);
+    } catch (error) {
+        console.error('Error fetching exams:', error);
+        res.status(500).send('Error fetching exams');
     }
 });
 

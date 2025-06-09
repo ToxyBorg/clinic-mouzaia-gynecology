@@ -1,55 +1,79 @@
-import { AppShell, Burger, Group, Title, Text, Button } from "@mantine/core";
+import { AppShell, Burger, Group, Title, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import "@mantine/core/styles.css";
-import ColposcopyForm from "./components/ColposcopyForm";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import ColposcopyFormPage from "./pages/ColposcopyFormPage";
+import ExamsList from "./pages/ExamsList";
 
 function App() {
 	const [opened, { toggle }] = useDisclosure();
 
 	return (
-		<AppShell
-			header={{ height: 60 }}
-			navbar={{
-				width: 300,
-				breakpoint: "sm",
-				collapsed: { mobile: !opened },
-			}}
-			padding='md'
-		>
-			<AppShell.Header>
-				<Group
-					h='100%'
-					px='md'
-				>
-					<Burger
-						opened={opened}
-						onClick={toggle}
-						hiddenFrom='sm'
-						size='sm'
-					/>
-					<Title
-						order={3}
-						style={{ flexGrow: 1 }}
+		<Router>
+			<AppShell
+				header={{ height: 60 }}
+				navbar={{
+					width: 300,
+					breakpoint: "sm",
+					collapsed: { mobile: !opened },
+				}}
+				padding='md'
+			>
+				<AppShell.Header>
+					<Group
+						h='100%'
+						px='md'
 					>
-						Colposcopy Exam Form
-					</Title>
+						<Burger
+							opened={opened}
+							onClick={toggle}
+							hiddenFrom='sm'
+							size='sm'
+						/>
+						<Title
+							order={3}
+							style={{ flexGrow: 1 }}
+						>
+							Colposcopy Exam System
+						</Title>
+					</Group>
+				</AppShell.Header>
+
+				<AppShell.Navbar p='md'>
 					<Button
-						onClick={() => window.print()}
-						className='no-print'
+						variant='subtle'
+						fullWidth
+						mb='md'
+						component={Link}
+						to='/new-exam'
 					>
-						Print Form (A4)
+						New Exam
 					</Button>
-				</Group>
-			</AppShell.Header>
+					<Button
+						variant='subtle'
+						fullWidth
+						mb='md'
+						component={Link}
+						to='/exams'
+					>
+						Exams List
+					</Button>
+				</AppShell.Navbar>
 
-			<AppShell.Navbar p='md'>
-				<Text>Navigation content</Text>
-			</AppShell.Navbar>
-
-			<AppShell.Main>
-				<ColposcopyForm />
-			</AppShell.Main>
-		</AppShell>
+				<AppShell.Main>
+					<Routes>
+						<Route
+							path='/new-exam'
+							element={<ColposcopyFormPage />}
+						/>
+						<Route
+							path='/exams'
+							element={<ExamsList />}
+						/>
+					</Routes>
+				</AppShell.Main>
+			</AppShell>
+		</Router>
 	);
 }
 
