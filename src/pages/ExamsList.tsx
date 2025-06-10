@@ -9,6 +9,7 @@ import {
 	Button,
 	Alert,
 } from "@mantine/core";
+import { COLPOSCOPY_ENDPOINTS } from "../api/endpoints";
 
 interface Exam {
 	id: string;
@@ -28,7 +29,7 @@ const ExamsList: React.FC = () => {
 			try {
 				setLoading(true);
 				setError(null);
-				const response = await fetch("http://localhost:3001/exams");
+				const response = await fetch(COLPOSCOPY_ENDPOINTS.LIST_EXAMS);
 				if (!response.ok) {
 					throw new Error(`HTTP error! status: ${response.status}`);
 				}
@@ -121,7 +122,7 @@ const ExamsList: React.FC = () => {
 									color='blue'
 									onClick={() =>
 										window.open(
-											`http://localhost:3001/exams/${exam.id}/pdf`,
+											COLPOSCOPY_ENDPOINTS.GET_EXAM_PDF(exam.id),
 											"_blank"
 										)
 									}

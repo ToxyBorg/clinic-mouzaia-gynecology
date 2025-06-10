@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import React, { useState } from "react";
+import { COLPOSCOPY_ENDPOINTS } from "../api/endpoints";
 
 const ColposcopyForm: React.FC = () => {
 	const [patientLastName, setPatientLastName] = useState("");
@@ -71,7 +72,7 @@ const ColposcopyForm: React.FC = () => {
 		console.log("Form data being sent to server:", formData);
 
 		try {
-			const response = await fetch("http://localhost:3001/generate-pdf", {
+			const response = await fetch(COLPOSCOPY_ENDPOINTS.GENERATE_PDF, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -83,10 +84,7 @@ const ColposcopyForm: React.FC = () => {
 				const data = await response.json();
 				if (data.success) {
 					// Open the PDF in a new tab
-					window.open(
-						`http://localhost:3001/exams/${data.examId}/pdf`,
-						"_blank"
-					);
+					window.open(COLPOSCOPY_ENDPOINTS.GET_EXAM_PDF(data.examId), "_blank");
 				} else {
 					alert("Failed to generate PDF: " + data.error);
 				}

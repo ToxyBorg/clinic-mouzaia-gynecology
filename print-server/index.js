@@ -35,7 +35,7 @@ app.get('/', (req, res) => {
     res.send('Print server is running!');
 });
 
-app.get('/list-fields', async (req, res) => {
+app.get('/colposcopy/list-fields', async (req, res) => {
     try {
         const pdfPath = path.join(__dirname, 'EXAMEN COLPOSCOPIQUE CLINIQUE MOUZAIA.pdf');
         const existingPdfBytes = await fs.readFile(pdfPath);
@@ -53,7 +53,7 @@ app.get('/list-fields', async (req, res) => {
     }
 });
 
-app.post('/generate-pdf', async (req, res) => {
+app.post('/colposcopy/generate-pdf', async (req, res) => {
     try {
         const formData = req.body;
         console.log('Server received form data:', formData);
@@ -236,7 +236,7 @@ app.post('/generate-pdf', async (req, res) => {
 });
 
 // Add a new endpoint to get PDF preview
-app.get('/exams/:id/pdf', async (req, res) => {
+app.get('/colposcopy/exams/:id/pdf', async (req, res) => {
     try {
         const exam = await prisma.colposcopyExam.findUnique({
             where: { id: req.params.id },
@@ -257,7 +257,7 @@ app.get('/exams/:id/pdf', async (req, res) => {
 });
 
 // Add a test endpoint to check database connection
-app.get('/test-db', async (req, res) => {
+app.get('/colposcopy/test-db', async (req, res) => {
     try {
         const examCount = await prisma.colposcopyExam.count();
         res.json({
@@ -274,7 +274,7 @@ app.get('/test-db', async (req, res) => {
 });
 
 // Add a new endpoint to list all generated exams
-app.get('/exams', async (req, res) => {
+app.get('/colposcopy/exams', async (req, res) => {
     try {
         const exams = await prisma.colposcopyExam.findMany({
             orderBy: { createdAt: 'desc' },
