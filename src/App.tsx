@@ -9,9 +9,9 @@ import {
 	useLocation,
 } from "react-router-dom";
 import ColposcopyFormPage from "./pages/ColposcopyFormPage";
-import ExamsList from "./pages/ExamsList";
 import Dashboard from "./pages/Dashboard";
 import ColposcopyDashboard from "./pages/ColposcopyDashboard";
+import ColposcopyExamsList from "./pages/ColposcopyExamsList";
 
 function Navigation() {
 	const location = useLocation();
@@ -97,7 +97,7 @@ function Navigation() {
 					/>
 					<Route
 						path='/colposcopy/exams'
-						element={<ExamsList />}
+						element={<ColposcopyExamsList />}
 					/>
 				</Routes>
 			</AppShell.Main>

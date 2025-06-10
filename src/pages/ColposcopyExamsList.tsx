@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import { COLPOSCOPY_ENDPOINTS } from "../api/endpoints";
 
-interface Exam {
+interface ColposcopyExam {
 	id: string;
 	patientName: string;
 	examDate: string;
@@ -19,8 +19,8 @@ interface Exam {
 	status: string;
 }
 
-const ExamsList: React.FC = () => {
-	const [exams, setExams] = useState<Exam[]>([]);
+const ColposcopyExamsList: React.FC = () => {
+	const [exams, setExams] = useState<ColposcopyExam[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
 
@@ -36,8 +36,8 @@ const ExamsList: React.FC = () => {
 				const data = await response.json();
 				setExams(data);
 			} catch (error) {
-				console.error("Error fetching exams:", error);
-				setError("Failed to load exams. Please try again later.");
+				console.error("Error fetching colposcopy exams:", error);
+				setError("Failed to load colposcopy exams. Please try again later.");
 			} finally {
 				setLoading(false);
 			}
@@ -52,7 +52,7 @@ const ExamsList: React.FC = () => {
 				size='md'
 				py='xl'
 			>
-				<Text>Loading exams...</Text>
+				<Text>Loading colposcopy exams...</Text>
 			</Container>
 		);
 	}
@@ -83,10 +83,10 @@ const ExamsList: React.FC = () => {
 				order={1}
 				mb='md'
 			>
-				Generated Exams
+				Colposcopy Exams
 			</Title>
 			{exams.length === 0 ? (
-				<Text>No exams found.</Text>
+				<Text>No colposcopy exams found.</Text>
 			) : (
 				<List spacing='md'>
 					{exams.map((exam) => (
@@ -127,7 +127,7 @@ const ExamsList: React.FC = () => {
 										)
 									}
 								>
-									View
+									View Report
 								</Button>
 							</Group>
 						</Paper>
@@ -138,4 +138,4 @@ const ExamsList: React.FC = () => {
 	);
 };
 
-export default ExamsList;
+export default ColposcopyExamsList;
