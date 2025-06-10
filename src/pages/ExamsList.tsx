@@ -120,6 +120,12 @@ const ExamsList: React.FC = () => {
 								<Button
 									variant='light'
 									color='blue'
+									onClick={() =>
+										window.open(
+											`http://localhost:3001/exams/${exam.id}/pdf`,
+											"_blank"
+										)
+									}
 								>
 									View
 								</Button>

@@ -80,17 +80,21 @@ const ColposcopyForm: React.FC = () => {
 			});
 
 			if (response.ok) {
-				const blob = await response.blob();
-				const url = window.URL.createObjectURL(blob);
-				const a = document.createElement("a");
-				a.href = url;
-				a.download = "colposcopy_exam_report.pdf";
-				document.body.appendChild(a);
-				a.click();
-				a.remove();
-				window.URL.revokeObjectURL(url);
+				const data = await response.json();
+				if (data.success) {
+					// Open the PDF in a new tab
+					window.open(
+						`http://localhost:3001/exams/${data.examId}/pdf`,
+						"_blank"
+					);
+				} else {
+					alert("Failed to generate PDF: " + data.error);
+				}
 			} else {
-				alert("Failed to generate PDF: " + (await response.text()));
+				const errorData = await response.json();
+				alert(
+					"Failed to generate PDF: " + (errorData.error || "Unknown error")
+				);
 			}
 		} catch (error) {
 			console.error("Error sending data to print server:", error);

@@ -197,7 +197,7 @@ app.post('/generate-pdf', async (req, res) => {
                     patientName: formData.patientFirstName + ' ' + formData.patientLastName,
                     patientAge: parseInt(formData.patientAge, 10),
                     patientFileNumber: formData.patientFileNumber || 'N/A',
-                    examDate: new Date(formData.examinationDate || new Date()),
+                    examDate: formData.examinationDate ? new Date(formData.examinationDate.split('/').reverse().join('-')) : new Date(),
                     doctorName: formData.treatingDoctor || 'N/A',
                     indication: formData.indication || 'N/A',
                     findings: formData.medicalHistory || 'N/A',
@@ -210,18 +210,49 @@ app.post('/generate-pdf', async (req, res) => {
                 }
             });
             console.log('Successfully saved exam to database with ID:', exam.id);
+
+            // Return the exam ID and success message instead of the PDF
+            res.json({
+                success: true,
+                examId: exam.id,
+                message: 'Exam generated successfully'
+            });
+
         } catch (dbError) {
             console.error('Database error:', dbError);
-            // Continue with sending the PDF even if database save fails
+            res.status(500).json({
+                success: false,
+                error: 'Failed to save exam to database'
+            });
         }
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=colposcopy_exam_report.pdf');
-        res.send(Buffer.from(pdfBytes));
 
     } catch (error) {
         console.error('Error generating PDF:', error);
-        res.status(500).send('Error generating PDF');
+        res.status(500).json({
+            success: false,
+            error: 'Error generating PDF'
+        });
+    }
+});
+
+// Add a new endpoint to get PDF preview
+app.get('/exams/:id/pdf', async (req, res) => {
+    try {
+        const exam = await prisma.colposcopyExam.findUnique({
+            where: { id: req.params.id },
+            select: { pdfData: true }
+        });
+
+        if (!exam) {
+            return res.status(404).json({ error: 'Exam not found' });
+        }
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename=colposcopy_exam_report.pdf');
+        res.send(Buffer.from(exam.pdfData));
+    } catch (error) {
+        console.error('Error fetching PDF:', error);
+        res.status(500).json({ error: 'Failed to fetch PDF' });
     }
 });
 
@@ -246,12 +277,21 @@ app.get('/test-db', async (req, res) => {
 app.get('/exams', async (req, res) => {
     try {
         const exams = await prisma.colposcopyExam.findMany({
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                patientName: true,
+                examDate: true,
+                doctorName: true,
+                status: true,
+                createdAt: true
+            }
         });
+
         res.json(exams);
     } catch (error) {
         console.error('Error fetching exams:', error);
-        res.status(500).send('Error fetching exams');
+        res.status(500).json({ error: 'Failed to fetch exams' });
     }
 });
 
