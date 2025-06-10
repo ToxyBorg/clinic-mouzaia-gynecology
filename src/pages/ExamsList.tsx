@@ -9,7 +9,6 @@ import {
 	Button,
 	Alert,
 } from "@mantine/core";
-import { IconAlertCircle } from "@tabler/icons-react";
 
 interface Exam {
 	id: string;
@@ -64,7 +63,7 @@ const ExamsList: React.FC = () => {
 				py='xl'
 			>
 				<Alert
-					icon={<IconAlertCircle size='1rem' />}
+					icon={"!"}
 					title='Error'
 					color='red'
 				>
