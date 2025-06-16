@@ -273,11 +273,45 @@ app.get('/colposcopy/test-db', async (req, res) => {
     }
 });
 
-// Add a new endpoint to list all generated exams
+/**
+ * GET /colposcopy/exams
+ * Retrieves a paginated list of colposcopy exams with optional search functionality
+ * Query parameters:
+ * - page: Page number (default: 1)
+ * - limit: Number of items per page (default: 10)
+ * - search: Optional search term to filter exams by patient name or doctor name
+ */
 app.get('/colposcopy/exams', async (req, res) => {
     try {
+        // Parse and validate pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || ''; // Get search term from query params
+        const skip = (page - 1) * limit;
+
+        // Build search query if search term is provided
+        const where = search ? {
+            OR: [
+                { patientName: { contains: search, mode: 'insensitive' } },
+                { doctorName: { contains: search, mode: 'insensitive' } }
+            ]
+        } : {};
+
+        // Get total count of matching records using case-insensitive LIKE
+        const countResult = await prisma.$queryRaw`
+            SELECT COUNT(*) as total 
+            FROM "ColposcopyExam" 
+            WHERE "patientName" ILIKE ${`%${search}%`}
+            OR "doctorName" ILIKE ${`%${search}%`}
+        `;
+        const total = Number(countResult[0].total);
+
+        // Get paginated and filtered exams using Prisma's built-in pagination
         const exams = await prisma.colposcopyExam.findMany({
+            where,
             orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
             select: {
                 id: true,
                 patientName: true,
@@ -288,10 +322,31 @@ app.get('/colposcopy/exams', async (req, res) => {
             }
         });
 
-        res.json(exams);
+        // Calculate pagination metadata
+        const totalPages = Math.ceil(total / limit);
+        const hasNextPage = page < totalPages;
+        const hasPreviousPage = page > 1;
+
+        // Return paginated results with metadata
+        res.json({
+            exams,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages,
+                hasNextPage,
+                hasPreviousPage,
+                startIndex: skip + 1,
+                endIndex: Math.min(skip + limit, total)
+            }
+        });
     } catch (error) {
         console.error('Error fetching exams:', error);
-        res.status(500).json({ error: 'Failed to fetch exams' });
+        res.status(500).json({
+            error: 'Failed to fetch exams',
+            details: error.message
+        });
     }
 });
 

@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
-import {
-	Container,
-	Title,
-	List,
-	Text,
-	Paper,
-	Group,
-	Button,
-	Alert,
-} from "@mantine/core";
+import { Container, Title, List, Text, Alert } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { COLPOSCOPY_ENDPOINTS } from "../api/endpoints";
+import { ExamListItem } from "../components/colposcopy/ExamListItem";
+import { ExamListControls } from "../components/colposcopy/ExamListControls";
 
 interface ColposcopyExam {
 	id: string;
@@ -19,8 +13,30 @@ interface ColposcopyExam {
 	status: string;
 }
 
+interface PaginatedResponse {
+	exams: ColposcopyExam[];
+	pagination: {
+		total: number;
+		page: number;
+		limit: number;
+		totalPages: number;
+		hasNextPage: boolean;
+		hasPreviousPage: boolean;
+		startIndex: number;
+		endIndex: number;
+	};
+}
+
 const ColposcopyExamsList: React.FC = () => {
 	const [exams, setExams] = useState<ColposcopyExam[]>([]);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [debouncedSearch] = useDebouncedValue(searchQuery, 500); // 500ms delay
+	const [currentPage, setCurrentPage] = useState(1);
+	const [limit, setLimit] = useState(10);
+	const [totalPages, setTotalPages] = useState(1);
+	const [total, setTotal] = useState(0);
+	const [startIndex, setStartIndex] = useState(0);
+	const [endIndex, setEndIndex] = useState(0);
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
 
@@ -29,12 +45,18 @@ const ColposcopyExamsList: React.FC = () => {
 			try {
 				setLoading(true);
 				setError(null);
-				const response = await fetch(COLPOSCOPY_ENDPOINTS.LIST_EXAMS);
+				const response = await fetch(
+					`${COLPOSCOPY_ENDPOINTS.LIST_EXAMS}?page=${currentPage}&limit=${limit}&search=${debouncedSearch}`
+				);
 				if (!response.ok) {
 					throw new Error(`HTTP error! status: ${response.status}`);
 				}
-				const data = await response.json();
-				setExams(data);
+				const data: PaginatedResponse = await response.json();
+				setExams(data.exams);
+				setTotalPages(data.pagination.totalPages);
+				setTotal(data.pagination.total);
+				setStartIndex(data.pagination.startIndex);
+				setEndIndex(data.pagination.endIndex);
 			} catch (error) {
 				console.error("Error fetching colposcopy exams:", error);
 				setError("Failed to load colposcopy exams. Please try again later.");
@@ -44,7 +66,7 @@ const ColposcopyExamsList: React.FC = () => {
 		};
 
 		fetchExams();
-	}, []);
+	}, [currentPage, limit, debouncedSearch]); // Changed from searchQuery to debouncedSearch
 
 	if (loading) {
 		return (
@@ -85,52 +107,27 @@ const ColposcopyExamsList: React.FC = () => {
 			>
 				Colposcopy Exams
 			</Title>
+			<ExamListControls
+				searchQuery={searchQuery}
+				onSearchChange={setSearchQuery}
+				currentPage={currentPage}
+				totalPages={totalPages}
+				onPageChange={setCurrentPage}
+				total={total}
+				limit={limit}
+				onLimitChange={setLimit}
+				startIndex={startIndex}
+				endIndex={endIndex}
+			/>
 			{exams.length === 0 ? (
 				<Text>No colposcopy exams found.</Text>
 			) : (
 				<List spacing='md'>
 					{exams.map((exam) => (
-						<Paper
+						<ExamListItem
 							key={exam.id}
-							p='md'
-							shadow='sm'
-						>
-							<Group justify='space-between'>
-								<div>
-									<Text fw={500}>{exam.patientName}</Text>
-									<Text
-										size='sm'
-										c='dimmed'
-									>
-										Exam Date: {new Date(exam.examDate).toLocaleDateString()}
-									</Text>
-									<Text
-										size='sm'
-										c='dimmed'
-									>
-										Doctor: {exam.doctorName}
-									</Text>
-									<Text
-										size='sm'
-										c='dimmed'
-									>
-										Status: {exam.status}
-									</Text>
-								</div>
-								<Button
-									variant='light'
-									color='blue'
-									onClick={() =>
-										window.open(
-											COLPOSCOPY_ENDPOINTS.GET_EXAM_PDF(exam.id),
-											"_blank"
-										)
-									}
-								>
-									View Report
-								</Button>
-							</Group>
-						</Paper>
+							exam={exam}
+						/>
 					))}
 				</List>
 			)}
